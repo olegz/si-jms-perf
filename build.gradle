@@ -1,0 +1,41 @@
+description = 'JMS SI/Camel performance'
+
+group = 'si.jms'
+
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'java'
+sourceCompatibility=1.6
+targetCompatibility=1.6
+
+repositories {
+    maven { url 'https://repo.springsource.org/libs-snapshot' }
+    maven { url 'http://www.gridgainsystems.com/maven2' }
+    maven { url 'http://snapshots.jboss.org/maven2'}
+    
+}
+
+dependencies {
+ 
+    // spring integration libraries
+    compile "org.springframework.integration:spring-integration-core:2.2.0.BUILD-SNAPSHOT"
+    compile "org.apache.camel:camel-core:2.10.0"
+    compile "org.apache.camel:camel-jms:2.10.0"
+   
+   // other dependencies
+    compile "log4j:log4j:1.2.16"
+    compile("org.apache.activemq:activemq-core:5.6.0") {
+         exclude group: 'org.springframework', module: 'spring-context'
+    }
+    compile("org.apache.activemq:activemq-pool:5.6.0") {
+         exclude group: 'org.springframework', module: 'spring-context'
+    }
+    compile("org.apache.activemq:activemq-camel:5.6.0") {
+         exclude group: 'org.springframework', module: 'spring-context'
+    }
+}
+
+task wrapper(type: Wrapper) {
+    description = 'Generates gradlew[.bat] scripts'
+}
+
