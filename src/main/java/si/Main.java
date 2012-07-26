@@ -19,7 +19,7 @@ public class Main {
 				new ClassPathXmlApplicationContext("producer-temp-reply.xml", Main.class);
 
 		RequestReplyExchanger gateway = context.getBean(RequestReplyExchanger.class);
-		System.out.println("\n$$$$$$$$$$$$-> Started SI Request/Reply performance test with Temporary Reply Queue <-$$$$$$$$$$$$\n");
+		System.out.println("\n==== Started SI Request/Reply performance test with Temporary Reply Queue ====\n");
 		for (int i = 0; i < 30; i++) {
 			testBatchOfMessagesSync(gateway, 20000, i);
 		}

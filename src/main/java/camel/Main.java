@@ -34,7 +34,7 @@ public final class Main {
     	ProducerTemplate producerTemplate = producerContext.createProducerTemplate();
 
     	producerTemplate.setDefaultEndpointUri("direct:invokeCamelOutQueue");
-    	System.out.println("\n$$$$$$$$$$$$-> Started Camel Request/Reply performance test with Temporary Reply Queue <-$$$$$$$$$$$$\n");
+    	System.out.println("\n=== Started Camel Request/Reply performance test with Temporary Reply Queue ===\n");
     	for (int i = 0; i < 50; i++) {
 			testBatchOfMessages(producerTemplate, 20000, i);
 		}
