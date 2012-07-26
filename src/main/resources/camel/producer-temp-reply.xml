@@ -8,7 +8,7 @@
 	<camelContext id="camel" xmlns="http://camel.apache.org/schema/spring">
 		<route>
 			<from uri="direct:invokeCamelOutQueue" />
-			<to uri="activemqOut:camelOutQueue?receiveTimeout=5&amp;replyToType=Exclusive" pattern="InOut" />
+			<to uri="activemqOut:camelOutQueue?receiveTimeout=5" pattern="InOut" />
 		</route>
 	</camelContext>
 	<bean id="activemqOut" class="org.apache.activemq.camel.component.ActiveMQComponent">
