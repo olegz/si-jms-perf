@@ -5,7 +5,7 @@ import org.springframework.integration.gateway.RequestReplyExchanger;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.util.StopWatch;
 
-public class SiJmsRequestReply {
+public class Main {
 
 
 	public static void main(String[] args) throws Exception{
@@ -13,10 +13,10 @@ public class SiJmsRequestReply {
 	}
 
 	public static void testPerformanceTempReply() throws Exception{
-		new ClassPathXmlApplicationContext("broker.xml", SiJmsRequestReply.class);
-		new ClassPathXmlApplicationContext("consumer.xml", SiJmsRequestReply.class);
+		new ClassPathXmlApplicationContext("broker.xml", Main.class);
+		new ClassPathXmlApplicationContext("consumer.xml", Main.class);
 		ClassPathXmlApplicationContext context =
-				new ClassPathXmlApplicationContext("producer-temp-reply.xml", SiJmsRequestReply.class);
+				new ClassPathXmlApplicationContext("producer-temp-reply.xml", Main.class);
 
 		RequestReplyExchanger gateway = context.getBean(RequestReplyExchanger.class);
 		for (int i = 0; i < 30; i++) {

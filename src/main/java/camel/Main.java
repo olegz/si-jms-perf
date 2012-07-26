@@ -16,29 +16,19 @@
  */
 package camel;
 
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.util.StopWatch;
 
-/**
- * An example class for demonstrating some of the basics behind Camel. This
- * example sends some text messages on to a JMS Queue, consumes them and
- * persists them to disk
- */
-public final class CamelInOutJmsProducer {
-
-	static Executor executor = Executors.newCachedThreadPool();
+public final class Main {
 
     public static void main(String args[]) throws Exception {
-    	new ClassPathXmlApplicationContext("broker.xml", CamelInOutJmsProducer.class);
-    	new ClassPathXmlApplicationContext("consumer.xml", CamelInOutJmsProducer.class);
+    	new ClassPathXmlApplicationContext("broker.xml", Main.class);
+    	new ClassPathXmlApplicationContext("consumer.xml", Main.class);
     	ClassPathXmlApplicationContext producer =
-    			new ClassPathXmlApplicationContext("producer-temp-reply.xml", CamelInOutJmsProducer.class);
+    			new ClassPathXmlApplicationContext("producer-temp-reply.xml", Main.class);
     	CamelContext producerContext = producer.getBean(CamelContext.class);
 
     	ProducerTemplate producerTemplate = producerContext.createProducerTemplate();

@@ -5,6 +5,7 @@ group = 'si.jms'
 apply plugin: 'eclipse'
 apply plugin: 'idea'
 apply plugin: 'java'
+apply plugin:'application'
 sourceCompatibility=1.6
 targetCompatibility=1.6
 
@@ -12,10 +13,11 @@ repositories {
     maven { url 'https://repo.springsource.org/libs-snapshot' }
     maven { url 'http://www.gridgainsystems.com/maven2' }
     maven { url 'http://snapshots.jboss.org/maven2'}
-    
 }
 
 dependencies {
+
+	compile files('lib/spring-integration-jms-2.2.0.BUILD-SNAPSHOT.jar')
  
     // spring integration libraries
     compile "org.springframework.integration:spring-integration-core:2.2.0.BUILD-SNAPSHOT"
@@ -37,5 +39,15 @@ dependencies {
 
 task wrapper(type: Wrapper) {
     description = 'Generates gradlew[.bat] scripts'
+}
+
+task(runSi, dependsOn: 'classes', type: JavaExec) {
+  main = 'si.Main'
+  classpath = sourceSets.main.runtimeClasspath
+}
+
+task(runCamel, dependsOn: 'classes', type: JavaExec) {
+  main = 'camel.Main'
+  classpath = sourceSets.main.runtimeClasspath
 }
 

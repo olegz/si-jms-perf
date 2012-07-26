@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src/main/java"/>
+	<classpathentry kind="src" path="src/main/resources"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="lib" path="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/org.springframework.integration/spring-integration-core/2.2.0.BUILD-SNAPSHOT/jar/f1493e15941d31999d392e1985a389133e91f22f/spring-integration-core-2.2.0.BUILD-SNAPSHOT.jar" sourcepath="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/org.springframework.integration/spring-integration-core/2.2.0.BUILD-SNAPSHOT/source/ade8708ac02e2b1aa5578524edf71227c1c1c3c/spring-integration-core-2.2.0.BUILD-SNAPSHOT-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/org.apache.camel/camel-core/2.10.0/bundle/2fccc1717851b54c65e079b46ec5ae2c6e1e511e/camel-core-2.10.0.jar" sourcepath="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/org.apache.camel/camel-core/2.10.0/source/5edc95d2b2e44b0cdd5f704840ca90f4a2c109e3/camel-core-2.10.0-sources.jar"/>
@@ -69,6 +70,6 @@
 	<classpathentry exported="true" kind="lib" path="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/org.jasypt/jasypt/1.8/jar/b14e87ad376dee74bb2d088279fe2df179cfc9e0/jasypt-1.8.jar" sourcepath="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/org.jasypt/jasypt/1.8/source/67732f6efcb9da3f3ebf00c93ff1fe775e2e6998/jasypt-1.8-sources.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/org.apache.geronimo.specs/geronimo-jta_1.0.1B_spec/1.0.1/jar/c9e67d21082a497f20e4ce87be1379faceb9c087/geronimo-jta_1.0.1B_spec-1.0.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/commons-pool/commons-pool/1.5.6/jar/16390e2d74df4ab08c06a85d42a74a951dc93ad7/commons-pool-1.5.6.jar" sourcepath="/Users/ozhurakousky/.gradle/caches/artifacts-13/filestore/commons-pool/commons-pool/1.5.6/source/bbfb73ed3c341d9738c64da8157910b967f878d6/commons-pool-1.5.6-sources.jar"/>
-	<classpathentry kind="lib" path="lib/spring-integration-jms-2.2.0.BUILD-SNAPSHOT.jar"/>
+	<classpathentry exported="true" kind="lib" path="/Users/ozhurakousky/build/si-jms-perf/lib/spring-integration-jms-2.2.0.BUILD-SNAPSHOT.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
