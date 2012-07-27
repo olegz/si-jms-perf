@@ -6,7 +6,7 @@
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
 		http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms-2.2.xsd">
 
-	<int:gateway default-request-channel="jmsIn"/>
+	<int:gateway default-request-channel="jmsIn" default-request-timeout="10000" default-reply-timeout="10000"/>
 
 	<int-jms:outbound-gateway request-channel="jmsIn"
 	    connection-factory="connectionFactory" 
