@@ -14,7 +14,8 @@
 	<int-jms:inbound-gateway request-channel="jmsIn"
 		request-destination-name="siOutQueue"
 		connection-factory="connectionFactory"
-		concurrent-consumers="10"/>
+		concurrent-consumers="10"
+		reply-timeout="3000"/>
 
 	<int:chain input-channel="jmsIn">
 		<int:header-enricher>
@@ -25,7 +26,7 @@
 	</int:chain>
 
 	<bean id="connectionFactory"
-		class="org.springframework.jms.connection.CachingConnectionFactory">
+		class="org.springframework.integration.jms.IntegrationCachingConnectionFactory">
 		<property name="targetConnectionFactory">
 			<bean class="org.apache.activemq.ActiveMQConnectionFactory">
 				<property name="brokerURL" value="tcp://localhost:61616"/>
