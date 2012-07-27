@@ -11,12 +11,18 @@
 		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
-
 	<int-jms:inbound-gateway request-channel="jmsIn"
 		request-destination-name="siOutQueue"
-		connection-factory="connectionFactory"/>
-  
-	<int:transformer input-channel="jmsIn" expression="payload"/>
+		connection-factory="connectionFactory"
+		concurrent-consumers="10"/>
+
+	<int:chain input-channel="jmsIn">
+		<int:header-enricher>
+			<int:header name="delay" expression="new java.util.Random().nextInt(3000)"/>
+		</int:header-enricher>
+		<int:delayer id="shouldntneedthis" default-delay="0" delay-header-name="delay"/>
+		<int:transformer expression="payload"/>
+	</int:chain>
 
 	<bean id="connectionFactory"
 		class="org.springframework.jms.connection.CachingConnectionFactory">
@@ -25,6 +31,7 @@
 				<property name="brokerURL" value="tcp://localhost:61616"/>
 			</bean>
 		</property>
+		<property name="sessionCacheSize" value="10"/>
 		<property name="cacheProducers" value="true" />
 		<property name="cacheConsumers" value="true" />
 	</bean>

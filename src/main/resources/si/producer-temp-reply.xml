@@ -6,12 +6,11 @@
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
 		http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms-2.2.xsd">
 
-	<int:gateway default-request-channel="jmsIn" />
+	<int:gateway default-request-channel="jmsIn"/>
 
 	<int-jms:outbound-gateway request-channel="jmsIn"
 	    connection-factory="connectionFactory" 
 		request-destination-name="siOutQueue"/>
-	
 
 	<bean id="connectionFactory"
 		class="org.springframework.jms.connection.CachingConnectionFactory">
@@ -20,6 +19,7 @@
 				<property name="brokerURL" value="tcp://localhost:61616"/>
 			</bean>
 		</property>
+		<property name="sessionCacheSize" value="10"/>
 		<property name="cacheProducers" value="true" />
 		<property name="cacheConsumers" value="true" />
 	</bean>
