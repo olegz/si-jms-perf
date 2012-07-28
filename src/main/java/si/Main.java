@@ -2,7 +2,9 @@ package si;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -19,17 +21,19 @@ import org.springframework.integration.gateway.RequestReplyExchanger;
 import org.springframework.integration.support.MessageBuilder;
 import org.springframework.jmx.access.MBeanProxyFactoryBean;
 import org.springframework.jmx.support.MBeanServerFactoryBean;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StopWatch;
 
 public class Main {
 
+	private final AtomicLong nulls = new AtomicLong();
 	private final AtomicLong timeouts = new AtomicLong();
 	private final AtomicLong matches = new AtomicLong();
 	private final AtomicLong mismatches = new AtomicLong();
 	private final AtomicLong failures = new AtomicLong();
 
 	public static void main(String[] args) throws Exception {
-		new Main().testPerformanceTempReply(25, 5, 100);
+		new Main().testPerformanceTempReply(25, 10, 1000);
 	}
 
 	public void testPerformanceTempReply(int numThreads, int numBatches, int batchSize) throws Exception {
@@ -44,44 +48,95 @@ public class Main {
 		for (int i = 0; i < numBatches; i++) {
 			testBatchOfMessagesSync(gateway, executor, batchSize, i);
 		}
-		System.out.println("===================================== DONE =====================================");
-		System.out.println("matches=" + matches.get() + ", mismatches=" + mismatches.get()
-				+ ", timeouts=" + timeouts.get() + ", failures=" + failures.get());
+		waitForCompletion(numBatches, batchSize);
+		producerContext.stop();
+		consumerContext.stop();
+		brokerContext.stop();
+	}
 
+	private void waitForCompletion(int numBatches, int batchSize) throws Exception {
 		MBeanServerFactoryBean mbeanServerFactory = new MBeanServerFactoryBean();
 		mbeanServerFactory.setLocateExistingServerIfPossible(true);
 		mbeanServerFactory.afterPropertiesSet();
-		
 		MBeanProxyFactoryBean brokerProxyFactory = new MBeanProxyFactoryBean();
 		brokerProxyFactory.setServer(mbeanServerFactory.getObject());
 		brokerProxyFactory.setObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker");
 		brokerProxyFactory.setProxyInterface(Broker.class);
 		brokerProxyFactory.afterPropertiesSet();
 		Broker broker = (Broker) brokerProxyFactory.getObject();
-		List<ObjectName> queues = Arrays.asList(broker.getQueues());
-		List<ObjectName> tempQueues = Arrays.asList(broker.getTemporaryQueues());
-		List<ObjectName> objectNames = new ArrayList<ObjectName>(queues);
-		objectNames.addAll(tempQueues);
-		long remainders = 0;
-		for (ObjectName objectName : objectNames) {
-			if ("siOutQueue".equals(objectName.getKeyProperty("Destination"))) {
-				// we only count remainders on REPLY queues
-				continue;
-			}
-			MBeanProxyFactoryBean browserProxyFactory = new MBeanProxyFactoryBean();
-			browserProxyFactory.setServer(mbeanServerFactory.getObject());
-			browserProxyFactory.setObjectName(objectName);
-			browserProxyFactory.setProxyInterface(QueueBrowser.class);
-			browserProxyFactory.afterPropertiesSet();
-			QueueBrowser browser = (QueueBrowser) browserProxyFactory.getObject();
-			CompositeData[] dataArray = browser.browse();
-			remainders += dataArray.length;
+		List<ObjectName> queueObjectNames = Arrays.asList(broker.getQueues());
+		List<ObjectName> tempQueueObjectNames = Arrays.asList(broker.getTemporaryQueues());
+		List<ObjectName> allQueueObjectNames = new ArrayList<ObjectName>(queueObjectNames);
+		allQueueObjectNames.addAll(tempQueueObjectNames);
+		Map<String,Queue> queues = new HashMap<String, Queue>();
+		for (ObjectName objectName : allQueueObjectNames) {
+			String queueName = objectName.getKeyProperty("Destination");
+			MBeanProxyFactoryBean queueProxyFactory = new MBeanProxyFactoryBean();
+			queueProxyFactory.setServer(mbeanServerFactory.getObject());
+			queueProxyFactory.setObjectName(objectName);
+			queueProxyFactory.setProxyInterface(Queue.class);
+			queueProxyFactory.afterPropertiesSet();
+			Queue queue = (Queue) queueProxyFactory.getObject();
+			queues.put(queueName, queue);
 		}
-		System.out.println("total remainders: " + remainders + " (on " + (objectNames.size() - 1) + " queues)");
+		AtomicLong remainders = new AtomicLong();
+		AtomicLong requestsEnqueued = new AtomicLong();
+		AtomicLong requestsDequeued = new AtomicLong();
+		AtomicLong repliesEnqueued = new AtomicLong();
+		AtomicLong repliesDequeued = new AtomicLong();
+		Map<String, Queue> queuesToCheck = queues;
+		long numQueues = queuesToCheck.size();
+		while (!CollectionUtils.isEmpty(queuesToCheck)) {
+			System.out.println("waiting 10 seconds for processing to complete (" + queuesToCheck.size() + " queues to check)");
+			queuesToCheck = updateStatistics(queuesToCheck, numBatches * batchSize, remainders,
+					requestsEnqueued, requestsDequeued, repliesEnqueued, repliesDequeued);
+			Thread.sleep(10 * 1000);
+		}
+		System.out.println("===================================== DONE =====================================");
+		System.out.println("matches:    " + matches.get());
+		System.out.println("mismatches: " + mismatches.get());
+		System.out.println("timeouts:   " + timeouts.get());
+		System.out.println("nulls:      " + nulls.get());
+		System.out.println("failures:   " + failures.get());
+		System.out.println("================================================================================");
+		System.out.println("total remainders: " + remainders + " (on " + (numQueues - 1) + " queues)");
+		System.out.println("total requests enqueued: " + requestsEnqueued);
+		System.out.println("total requests dequeued: " + requestsDequeued);
+		System.out.println("total replies enqueued:  " + repliesEnqueued);
+		System.out.println("total replies dequeued:  " + repliesDequeued);
+		System.out.println("================================================================================");
+	}
 
-		producerContext.stop();
-		consumerContext.stop();
-		brokerContext.stop();
+	private Map<String, Queue> updateStatistics(Map<String, Queue> queuesToCheck, long totalExpected, AtomicLong remainders,
+			AtomicLong requestsEnqueued, AtomicLong requestsDequeued, AtomicLong repliesEnqueued, AtomicLong repliesDequeued) {
+		Map<String, Queue> incompleteQueues = new HashMap<String, Queue>();
+		for (Map.Entry<String, Queue> entry : queuesToCheck.entrySet()) {
+			String queueName = entry.getKey();
+			Queue queue = entry.getValue();
+			CompositeData[] dataArray = queue.browse();
+			long enqueued = queue.getEnqueueCount();
+			long dequeued = queue.getDequeueCount();
+			if ("siOutQueue".equals(queueName)) {
+				if (enqueued == dequeued) {
+					requestsEnqueued.addAndGet(enqueued);
+					requestsDequeued.addAndGet(dequeued);
+				}
+				else {
+					incompleteQueues.put(queueName, queue);
+				}
+			}
+			else {
+				remainders.addAndGet(dataArray.length);
+				if (enqueued > 0) {
+					repliesEnqueued.addAndGet(enqueued);
+					repliesDequeued.addAndGet(dequeued);
+				}
+				else {
+					incompleteQueues.put(queueName, queue);
+				}
+			}
+		}
+		return incompleteQueues; 
 	}
 
 	public static interface Broker {
@@ -89,8 +144,10 @@ public class Main {
 		ObjectName[] getTemporaryQueues();
 	}
 
-	public static interface QueueBrowser {
+	public static interface Queue {
 		CompositeData[] browse();
+		long getEnqueueCount();
+		long getDequeueCount();
 	}
 
 	private void testBatchOfMessagesSync(final RequestReplyExchanger gateway, Executor executor, int batchSize, final int batchCount) throws Exception{
@@ -105,7 +162,7 @@ public class Main {
 						String requestPayload = batchCount + "." + loopCount;
 						Message<?> reply = gateway.exchange(MessageBuilder.withPayload(requestPayload).build());
 						if (reply == null) {
-							timeouts.incrementAndGet();
+							nulls.incrementAndGet();
 						}
 						else if (reply.getPayload().equals(requestPayload)) {
 							matches.incrementAndGet();
