@@ -10,10 +10,11 @@
 
 	<int-jms:outbound-gateway request-channel="jmsIn"
 	    connection-factory="connectionFactory" 
-		request-destination-name="siOutQueue"/>
+		request-destination-name="siOutQueue"
+		correlation-key="JMSCorrelationID"/>
 
 	<bean id="connectionFactory"
-		class="org.springframework.jms.connection.CachingConnectionFactory">
+		class="org.springframework.integration.jms.IntegrationCachingConnectionFactory">
 		<property name="targetConnectionFactory">
 			<bean class="org.apache.activemq.ActiveMQConnectionFactory">
 				<property name="brokerURL" value="tcp://localhost:61616"/>
