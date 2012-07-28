@@ -10,8 +10,7 @@
 
 	<int-jms:outbound-gateway request-channel="jmsIn"
 	    connection-factory="connectionFactory" 
-		request-destination-name="siOutQueue"
-		correlation-key="JMSCorrelationID"/>
+		request-destination-name="siOutQueue"/>
 
 	<bean id="connectionFactory"
 		class="org.springframework.integration.jms.IntegrationCachingConnectionFactory">

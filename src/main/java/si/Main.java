@@ -1,16 +1,24 @@
 package si;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import javax.management.ObjectName;
+import javax.management.openmbean.CompositeData;
+
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 import org.springframework.integration.Message;
 import org.springframework.integration.MessageDeliveryException;
 import org.springframework.integration.gateway.RequestReplyExchanger;
 import org.springframework.integration.support.MessageBuilder;
+import org.springframework.jmx.access.MBeanProxyFactoryBean;
+import org.springframework.jmx.support.MBeanServerFactoryBean;
 import org.springframework.util.StopWatch;
 
 public class Main {
@@ -21,7 +29,7 @@ public class Main {
 	private final AtomicLong failures = new AtomicLong();
 
 	public static void main(String[] args) throws Exception {
-		new Main().testPerformanceTempReply(50, 5, 100);
+		new Main().testPerformanceTempReply(25, 5, 100);
 	}
 
 	public void testPerformanceTempReply(int numThreads, int numBatches, int batchSize) throws Exception {
@@ -39,9 +47,50 @@ public class Main {
 		System.out.println("===================================== DONE =====================================");
 		System.out.println("matches=" + matches.get() + ", mismatches=" + mismatches.get()
 				+ ", timeouts=" + timeouts.get() + ", failures=" + failures.get());
+
+		MBeanServerFactoryBean mbeanServerFactory = new MBeanServerFactoryBean();
+		mbeanServerFactory.setLocateExistingServerIfPossible(true);
+		mbeanServerFactory.afterPropertiesSet();
+		
+		MBeanProxyFactoryBean brokerProxyFactory = new MBeanProxyFactoryBean();
+		brokerProxyFactory.setServer(mbeanServerFactory.getObject());
+		brokerProxyFactory.setObjectName("org.apache.activemq:BrokerName=localhost,Type=Broker");
+		brokerProxyFactory.setProxyInterface(Broker.class);
+		brokerProxyFactory.afterPropertiesSet();
+		Broker broker = (Broker) brokerProxyFactory.getObject();
+		List<ObjectName> queues = Arrays.asList(broker.getQueues());
+		List<ObjectName> tempQueues = Arrays.asList(broker.getTemporaryQueues());
+		List<ObjectName> objectNames = new ArrayList<ObjectName>(queues);
+		objectNames.addAll(tempQueues);
+		long remainders = 0;
+		for (ObjectName objectName : objectNames) {
+			if ("siOutQueue".equals(objectName.getKeyProperty("Destination"))) {
+				// we only count remainders on REPLY queues
+				continue;
+			}
+			MBeanProxyFactoryBean browserProxyFactory = new MBeanProxyFactoryBean();
+			browserProxyFactory.setServer(mbeanServerFactory.getObject());
+			browserProxyFactory.setObjectName(objectName);
+			browserProxyFactory.setProxyInterface(QueueBrowser.class);
+			browserProxyFactory.afterPropertiesSet();
+			QueueBrowser browser = (QueueBrowser) browserProxyFactory.getObject();
+			CompositeData[] dataArray = browser.browse();
+			remainders += dataArray.length;
+		}
+		System.out.println("total remainders: " + remainders + " (on " + (objectNames.size() - 1) + " queues)");
+
 		producerContext.stop();
 		consumerContext.stop();
 		brokerContext.stop();
+	}
+
+	public static interface Broker {
+		ObjectName[] getQueues();
+		ObjectName[] getTemporaryQueues();
+	}
+
+	public static interface QueueBrowser {
+		CompositeData[] browse();
 	}
 
 	private void testBatchOfMessagesSync(final RequestReplyExchanger gateway, Executor executor, int batchSize, final int batchCount) throws Exception{

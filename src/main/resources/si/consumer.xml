@@ -18,11 +18,11 @@
 		request-timeout="10000"
 		reply-timeout="10000"/>
 
-	<int:transformer input-channel="otherJmsInOption">
+	<int:transformer input-channel="jmsIn">
 		<bean class="si.MyRandomlySlowService"/>
 	</int:transformer>
 
-	<int:chain input-channel="jmsIn">
+	<int:chain input-channel="notused">
 		<int:header-enricher>
 			<int:header name="delay" expression="new java.util.Random().nextInt(3000)"/>
 		</int:header-enricher>
