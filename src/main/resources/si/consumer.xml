@@ -14,7 +14,13 @@
 	<int-jms:inbound-gateway request-channel="jmsIn"
 		request-destination-name="siOutQueue"
 		connection-factory="connectionFactory"
-		concurrent-consumers="10"/>
+		concurrent-consumers="10"
+		request-timeout="10000"
+		reply-timeout="10000"/>
+
+	<int:transformer input-channel="otherJmsInOption">
+		<bean class="si.MyRandomlySlowService"/>
+	</int:transformer>
 
 	<int:chain input-channel="jmsIn">
 		<int:header-enricher>

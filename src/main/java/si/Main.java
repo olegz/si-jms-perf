@@ -21,7 +21,7 @@ public class Main {
 	private final AtomicLong failures = new AtomicLong();
 
 	public static void main(String[] args) throws Exception {
-		new Main().testPerformanceTempReply(10, 3, 10);
+		new Main().testPerformanceTempReply(50, 5, 100);
 	}
 
 	public void testPerformanceTempReply(int numThreads, int numBatches, int batchSize) throws Exception {
