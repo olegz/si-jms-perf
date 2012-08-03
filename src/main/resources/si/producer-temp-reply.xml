@@ -6,14 +6,15 @@
 		http://www.springframework.org/schema/integration http://www.springframework.org/schema/integration/spring-integration.xsd
 		http://www.springframework.org/schema/integration/jms http://www.springframework.org/schema/integration/jms/spring-integration-jms-2.2.xsd">
 
-	<int:gateway default-request-channel="jmsIn" default-request-timeout="10000" default-reply-timeout="10000"/>
+	<int:gateway default-request-channel="jmsIn" default-request-timeout="-1" default-reply-timeout="-1"/>
 
 	<int-jms:outbound-gateway request-channel="jmsIn"
 	    connection-factory="connectionFactory" 
-		request-destination-name="siOutQueue"/>
+		request-destination-name="siOutQueue"
+		receive-timeout="5000"/>
 
 	<bean id="connectionFactory"
-		class="org.springframework.integration.jms.IntegrationCachingConnectionFactory">
+		class="org.springframework.jms.connection.CachingConnectionFactory">
 		<property name="targetConnectionFactory">
 			<bean class="org.apache.activemq.ActiveMQConnectionFactory">
 				<property name="brokerURL" value="tcp://localhost:61616"/>

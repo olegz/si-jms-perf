@@ -12,19 +12,27 @@
 		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd">
 
 	<int-jms:inbound-gateway request-channel="jmsIn"
+		container="dmlc"
 		request-destination-name="siOutQueue"
-		connection-factory="connectionFactory"
-		concurrent-consumers="10"
 		request-timeout="10000"
 		reply-timeout="10000"/>
 
-	<int:transformer input-channel="jmsIn">
+	<bean id="dmlc" class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+		<property name="connectionFactory" ref="connectionFactory"/>
+		<property name="destinationName" value="siOutQueue"/>
+		<property name="concurrentConsumers" value="10"/>
+		<property name="errorHandler" ref="customErrorHandler"/>
+	</bean>
+
+	<bean id="customErrorHandler" class="si.CustomErrorHandler"/>
+
+	<int:transformer input-channel="notused">
 		<bean class="si.MyRandomlySlowService"/>
 	</int:transformer>
 
-	<int:chain input-channel="notused">
+	<int:chain input-channel="jmsIn">
 		<int:header-enricher>
-			<int:header name="delay" expression="new java.util.Random().nextInt(3000)"/>
+			<int:header name="delay" expression="new java.util.Random().nextInt(2500)"/>
 		</int:header-enricher>
 		<int:delayer id="shouldntneedthis" default-delay="0" delay-header-name="delay"/>
 		<int:transformer expression="payload"/>
